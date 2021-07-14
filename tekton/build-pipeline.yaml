@@ -1,0 +1,68 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: camel-containersource-pipeline
+spec:
+  workspaces:
+    - name: build-workspace
+    - name: maven-settings
+  params:
+    - name: app-name
+      type: string
+      description: Name of the image to build.
+    - name: namespace
+      type: string
+      description: Namespace where the pipeline will run.
+    - name: git-url
+      type: string
+      description: Url of the git repo to source the build from.
+    - name: git-revision
+      type: string
+      description: Branch or tag to use for the build.
+      default: "main"
+  tasks:
+    - name: clone-source
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      workspaces:
+        - name: output
+          workspace: build-workspace
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: subdirectory
+          value: ""
+        - name: deleteExisting
+          value: "true"
+        - name: revision
+          value: $(params.git-revision)
+    - name: quarkus-build
+      taskRef:
+        name: maven
+        kind: ClusterTask
+      runAfter:
+        - clone-source 
+      params:
+        - name: GOALS
+          value:
+            - package
+      workspaces:
+        - name: source
+          workspace: build-workspace
+        - name: maven-settings
+          workspace: maven-settings
+    - name: build-image
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      params:
+        - name: IMAGE
+          value: image-registry.openshift-image-registry.svc:5000/$(params.namespace)/$(params.app-name):latest
+        - name: DOCKERFILE
+          value: ./Containerfile
+      workspaces:
+        - name: source
+          workspace: build-workspace
+      runAfter:
+        - quarkus-build

@@ -1,0 +1,22 @@
+kind: PipelineRun
+apiVersion: tekton.dev/v1beta1
+metadata:
+  generateName: camel-containersource-pipeline-run-
+spec:
+  pipelineRef:
+    name: camel-containersource-pipeline
+  params:
+    - name: "git-url"
+      value: "https://github.com/pittar-integration/camel-containersource.git"
+    - name: "git-revision"
+      value: "main"
+    - name: "app-name"
+      value: "camel-containersource"
+    - name: "namespace"
+      value: "cetest"
+  workspaces:
+    - name: build-workspace
+      persistentVolumeClaim:
+        claimName: build-camel-containersource-workspace
+    - name: maven-settings
+      emptyDir: {}
