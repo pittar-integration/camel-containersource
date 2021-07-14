@@ -28,7 +28,7 @@ public class TimerToCloudEventsRoute extends RouteBuilder {
         from("direct:postcloudevents")
             .setHeader("CamelHttpMethod", constant("POST"))
             .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
-            .setHeader("Ce-Id", constant("camel-timer"))
+            .setHeader("Ce-Id", constant("camel-timer-containersource"))
             .setHeader("Ce-Specversion", constant("1.0"))
             .setHeader("Ce-Type", constant("counter"))
             .setHeader("Ce-source", constant("Fuse"))
